@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Hidrológica</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        .results {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .coordinates-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .spinner-container {
+            text-align: center;
+        }
+        .spinner-text {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .results-card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        .results-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .btn-icon {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <div class="spinner-text">Gerando Memorial...</div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Cálculos realizados com sucesso!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h1 class="text-center mb-4">
+                            <i class="fas fa-calculator text-primary me-2"></i>
+                            Calculadora Hidrológica
+                        </h1>
+                        
+                        <form id="calculatorForm" class="needs-validation" novalidate>
+
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="k" required step="any" placeholder="K">
+                                        <label for="k">K</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para K.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="a" required step="any" placeholder="a">
+                                        <label for="a">a</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para a.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="b" required step="any" placeholder="b">
+                                        <label for="b">b</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para b.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="c" required step="any" placeholder="c">
+                                        <label for="c">c</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para c.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="ab" required step="any" placeholder="Área da Bacia">
+                                        <label for="ab">Área da Bacia (Ab) em km²</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para a área da bacia.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="ch" required step="any" placeholder="Comprimento Horizontal">
+                                        <label for="ch">Comprimento Horizontal (Ch) em km</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para o comprimento horizontal.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="alt" required step="any" placeholder="Diferença de altura">
+                                        <label for="alt">Diferença de altura (Alt) em m</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para a diferença de altura.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="ce" required step="any" placeholder="Coeficiente de Escoamento">
+                                        <label for="ce">Coeficiente de Escoamento (Ce)</label>
+                                        <div class="invalid-feedback">
+                                            Por favor, insira um valor válido para o coeficiente de escoamento.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="coordinates-section">
+                                <h4 class="mb-3">
+                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                    Coordenadas
+                                </h4>
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="coord_barramento" placeholder="Coordenadas do Barramento">
+                                            <label for="coord_barramento">Coordenadas do Barramento (E / S)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="coord_emprestimo" placeholder="Coordenadas da Área de Empréstimo">
+                                            <label for="coord_emprestimo">Coordenadas da Área de Empréstimo (E / S)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="coord_bota_fora" placeholder="Coordenadas do Bota Fora">
+                                            <label for="coord_bota_fora">Coordenadas do Bota Fora (E / S)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-calculator btn-icon"></i>Calcular
+                                </button>
+                                <button type="button" class="btn btn-success btn-lg" id="btnMemorial">
+                                    <i class="fas fa-file-word btn-icon"></i>Gerar Memorial
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg" id="btnLimpar">
+                                    <i class="fas fa-eraser btn-icon"></i>Limpar
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="results mt-4 results-card" id="resultsSection" style="display: none;">
+                            <h4 class="mb-3">
+                                <i class="fas fa-chart-bar text-primary me-2"></i>
+                                Resultados
+                            </h4>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Tempo de Concentração</h5>
+                                            <p class="card-text">
+                                                <span id="resultTc" class="h3">-</span>
+                                                <small class="text-muted">minutos</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Intensidade Média</h5>
+                                            <p class="card-text">
+                                                <span id="resultIm" class="h3">-</span>
+                                                <small class="text-muted">mm/h</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Vazão</h5>
+                                            <p class="card-text">
+                                                <span id="resultQ" class="h3">-</span>
+                                                <small class="text-muted">m³/s</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let lastCalculation = null;
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        function calculate(data) {
+            try {
+                // Cálculo do Tc
+                const tc = (((4 * Math.sqrt(data.ab)) + (1.5 * data.ch)) / 
+                           (0.8 * Math.sqrt(data.alt))) * 60;
+                
+                // Cálculo do Im
+                const im = ((data.k * Math.pow(30, data.a)) / 
+                           (Math.pow((data.b + tc), data.c)));
+                
+                // Cálculo do Q
+                const q = ((data.ce * im * (data.ab * 100)) / 360) * 0.27;
+
+                return { tc, im, q };
+            } catch (error) {
+                console.error('Erro nos cálculos:', error);
+                throw error;
+            }
+        }
+
+        function validateInputs(formData) {
+            const requiredNumericFields = ['k', 'a', 'b', 'c', 'ab', 'ch', 'alt', 'ce'];
+            
+            for (const field of requiredNumericFields) {
+                const value = formData[field];
+                if (isNaN(value) || value <= 0) {
+                    const input = document.getElementById(field);
+                    input.classList.add('is-invalid');
+                    throw new Error(`O valor de ${field.toUpperCase()} deve ser um número positivo.`);
+                }
+            }
+            return true;
+        }
+
+        function updateResults(results) {
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultTc').textContent = results.tc.toFixed(2);
+            document.getElementById('resultIm').textContent = results.im.toFixed(2);
+            document.getElementById('resultQ').textContent = results.q.toFixed(2);
+        }
+
+        function clearForm() {
+            document.getElementById('calculatorForm').reset();
+            document.getElementById('resultsSection').style.display = 'none';
+            lastCalculation = null;
+            
+            document.querySelectorAll('.is-invalid').forEach(element => {
+                element.classList.remove('is-invalid');
+            });
+        }
+
+        async function generateMemorial() {
+            if (!lastCalculation) {
+                alert('Por favor, realize os cálculos primeiro.');
+                return;
+            }
+
+            try {
+                showLoading();
+                const response = await fetch('http://localhost:3001/api/generate-memorial', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(lastCalculation)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro ao gerar memorial');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `memorial_${Date.now()}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                const toast = new bootstrap.Toast(document.getElementById('successToast'));
+                toast.show();
+
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao gerar o memorial: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        // Inicialização do formulário e eventos
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('calculatorForm');
+            const btnLimpar = document.getElementById('btnLimpar');
+            const btnMemorial = document.getElementById('btnMemorial');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                try {
+                    // Coletar dados do formulário
+                    const formData = {
+                        k: parseFloat(document.getElementById('k').value),
+                        a: parseFloat(document.getElementById('a').value),
+                        b: parseFloat(document.getElementById('b').value),
+                        c: parseFloat(document.getElementById('c').value),
+                        ab: parseFloat(document.getElementById('ab').value),
+                        ch: parseFloat(document.getElementById('ch').value),
+                        alt: parseFloat(document.getElementById('alt').value),
+                        ce: parseFloat(document.getElementById('ce').value),
+                        coord_barramento: document.getElementById('coord_barramento').value,
+                        coord_emprestimo: document.getElementById('coord_emprestimo').value,
+                        coord_bota_fora: document.getElementById('coord_bota_fora').value
+                    };
+
+                    // Validação
+                    validateInputs(formData);
+
+                    // Realizarr cálculos
+                    const results = calculate(formData);
+
+                    // Atualizar resultados na interface
+                    updateResults(results);
+
+                    // Armazenar calculos
+                    lastCalculation = { formData, results };
+
+                    // Mostrar toastt de sucesso
+                    const toast = new bootstrap.Toast(document.getElementById('successToast'));
+                    toast.show();
+
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro nos cálculos: ' + error.message);
+                }
+            });
+
+            btnLimpar.addEventListener('click', clearForm);
+            btnMemorial.addEventListener('click', generateMemorial);
+
+            // Validação em tempo real para campos numéricoss
+            const numericInputs = ['k', 'a', 'b', 'c', 'ab', 'ch', 'alt', 'ce'];
+            numericInputs.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('input', function() {
+                    const value = parseFloat(this.value);
+                    if (isNaN(value) || value <= 0) {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
