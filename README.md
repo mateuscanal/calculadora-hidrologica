@@ -87,11 +87,11 @@ Se houver erro na geração do documento:
 - Confira o console do servidor para mensagens de erro detalhadas
 
 ### Porta já em uso
-Se a porta 3000 já estiver em uso, você pode:
+Se a porta 3001 já estiver em uso, você pode:
 1. Parar o processo que está usando a porta
 2. Ou mudar a porta no `server.js`:
    ```javascript
-   const PORT = 3001; // ou outra porta disponível
+   const PORT = 3002; // ou outra porta disponível
    ```
    E atualizar a URL no frontend também.
 
